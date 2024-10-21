@@ -6,7 +6,7 @@ const app = express();
 
 //routes
 app.get('/', (req, res) => {
-    res.send("<h1>Welcome to Job -Portal</h1>");
+    res.send("<h1>Hi !Welcome to Job -Portal</h1>");
 });
 
 //listen
