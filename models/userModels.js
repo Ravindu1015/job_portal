@@ -1,9 +1,8 @@
-import { Mongoose } from "mongoose";
-import validator from "validator";
-import isEmail from "./../node_modules/validator/es/lib/isEmail";
+import mongoose from "mongoose"; // Import mongoose correctly as lowercase
+import validator from "validator"; // Import validator as usual
 
-//schema
-const userSchema = new Mongoose.Schema(
+// Define the schema
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -13,7 +12,10 @@ const userSchema = new Mongoose.Schema(
       type: String,
       required: [true, "Please provide an email"],
       unique: true,
-      validate: validator.isEmail,
+      validate: {
+        validator: validator.isEmail,
+        message: "Please provide a valid email address",
+      },
     },
     password: {
       type: String,
@@ -30,4 +32,4 @@ const userSchema = new Mongoose.Schema(
   }
 );
 
-export default Mongoose.model("User", userSchema);
+export default mongoose.model("User", userSchema);
