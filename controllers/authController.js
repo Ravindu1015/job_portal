@@ -1,5 +1,4 @@
-import bcrypt from "bcryptjs"; // Import bcrypt for password hashing
-import userModel from "../models/userModel.js"; // Ensure userModel is correctly imported
+import userModel from "../models/userModels.js";
 
 export const registerController = async (req, res) => {
   try {
