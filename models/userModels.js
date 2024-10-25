@@ -1,5 +1,5 @@
-import mongoose from "mongoose"; // Import mongoose correctly as lowercase
-import validator from "validator"; // Import validator as usual
+import mongoose from "mongoose";
+import validator from "validator";
 
 // Define the schema
 const userSchema = new mongoose.Schema(

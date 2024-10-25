@@ -33,14 +33,11 @@ export const registerController = async (req, res) => {
       });
     }
 
-    // Hash the password before saving it to the database
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create a new user
     const user = await userModel.create({
       name,
       email,
-      password: hashedPassword,
+      password,
     });
 
     res.status(201).json({
