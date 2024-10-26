@@ -10,6 +10,7 @@ import connectDB from "./config/db.js";
 //rotes import
 import testRoutes from "./routes/testRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import errorMiddleware from "./middlewares/errorMiddleware.js";
 
 // dot env config
 dotenv.config();
@@ -39,6 +40,9 @@ app.post("/api/v1/test/test-post", (req, res) => {
 // Test Routes from external file
 app.use("/api/v1/test", testRoutes);
 app.use("/api/v1/auth", authRoutes);
+
+//validation middleware
+app.use(errorMiddleware);
 
 // Port
 const PORT = process.env.PORT || 8080;
