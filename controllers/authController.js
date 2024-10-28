@@ -39,9 +39,14 @@ export const registerController = async (req, res) => {
     password,
   });
 
+  //token
+  const token = user.createJWT();
+
   res.status(201).json({
     message: "User registered successfully",
-    success: true,
-    data: user,
+    //success: true,
+    //message:"user created succesfully",
+    user,
+    token,
   });
 };
