@@ -69,7 +69,7 @@ export const loginController = async (req, res) => {
   }
 
   //find user by mail
-  const user = await userModel.findOne({ email });
+  const user = await userModel.findOne({ email }).select("+password");
   if (!user) {
     return res.status(400).json({
       message: "Invalid credentials",
@@ -85,6 +85,7 @@ export const loginController = async (req, res) => {
       success: false,
     });
   }
+  user.password = undefined;
 
   //token
   const token = user.createJWT();
@@ -92,8 +93,8 @@ export const loginController = async (req, res) => {
     message: "User logged in successfully",
     success: true,
     user: {
-      id: user._id,
       name: user.name,
+      lastName: user.lastName,
       email: user.email,
       location: user.location,
     },
