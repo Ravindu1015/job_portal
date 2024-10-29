@@ -5,7 +5,7 @@ const userAuth = async (req, res, next) => {
   if (!authHeader || authHeader.startWith("Bearer")) {
     next("Auth Failed");
   }
-  const token = authHeader.splite(" ")[1];
+  const token = authHeader.split(" ")[1];
   try {
     const payload = JWT.verify(token, process.env.JWT_SECRET);
     req.user = { userId: payload.userId };
