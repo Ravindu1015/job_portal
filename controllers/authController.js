@@ -56,3 +56,47 @@ export const registerController = async (req, res) => {
     token,
   });
 };
+
+export const loginController = async (req, res) => {
+  const { email, password } = req.body;
+
+  //validation
+  if (!email || !password) {
+    return res.status(400).json({
+      message: "Please provide email and password",
+      success: false,
+    });
+  }
+
+  //find user by mail
+  const user = await userModel.findOne({ email });
+  if (!user) {
+    return res.status(400).json({
+      message: "Invalid credentials",
+      success: false,
+    });
+  }
+
+  //compare passworrd
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    return res.status(400).json({
+      message: "Invalid credentials",
+      success: false,
+    });
+  }
+
+  //token
+  const token = user.createJWT();
+  res.status(200).json({
+    message: "User logged in successfully",
+    success: true,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      location: user.location,
+    },
+    token,
+  });
+};
