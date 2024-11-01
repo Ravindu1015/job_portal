@@ -5,13 +5,9 @@ const router = express.Router();
 
 //routes
 //GET USERS || GET
-router.get("/", (req, res) => {
-  res.send("GET USERS");
-});
+router.get("/users", getUsersController);
 
 //updatde user ||put
-router.put("/", (req, res) => {
-  res.send("UPDATE USER");
-});
+router.put("/update-user", userAuth, updateUserController);
 
 export default router;
