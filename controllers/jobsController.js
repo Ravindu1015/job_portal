@@ -1,1 +1,1 @@
-export const createJobController
+export const createJobController = async (req, res, next) => {};
