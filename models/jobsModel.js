@@ -25,6 +25,10 @@ const jobSchema = new mongoose.Schema({
     default: "Mumbai",
     required: [true, "work location required"],
   },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
 });
 
 export default mongoose.model("Job", jobSchema);
