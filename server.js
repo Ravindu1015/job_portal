@@ -13,6 +13,7 @@ import testRoutes from "./routes/testRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import errorMiddleware from "./middlewares/errorMiddleware.js";
 import userRoutes from "./routes/userRoutes.js";
+import jobsRoutes from "./routes/jobsRoutes.js";
 
 // dot env config
 dotenv.config();
@@ -43,6 +44,7 @@ app.post("/api/v1/test/test-post", (req, res) => {
 app.use("/api/v1/test", testRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/job", jobsRoutes);
 
 //validation middleware
 app.use(errorMiddleware);
