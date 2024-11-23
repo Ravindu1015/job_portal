@@ -1,6 +1,7 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
 import { createJobController } from "../controllers/jobsController.js";
+import getAllJobsController from "./jobsRoutes";
 
 const router = express.Router();
 
@@ -8,15 +9,7 @@ const router = express.Router();
 // create job||post
 router.post("/create-job", userAuth, createJobController);
 
-//get jobs}}post
-const job=await jobsModel.create(req.body);
-res.status(201).json({job});
+//get jobs||get
+router.get("/get-job", userAuth, getAllJobsController);
 
-
-export default getAllJobsController=async(req,res,next) =>{
-    const jobs=await jobsModel.find();
-    res.status(200).json({jobs}({
-        totalJobs=jobs.length,
-        jobs,
-    })
-}
+export default router;
