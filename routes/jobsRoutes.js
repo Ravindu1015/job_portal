@@ -13,7 +13,7 @@ const router = express.Router();
 router.post("/create-job", userAuth, createJobController);
 
 // Get jobs || GET
-router.get("/get-jobs", userAuth, getAllJobsController);
+router.get("/get-job", userAuth, getAllJobsController);
 
 // Update job || PATCH
 router.patch("/update-job/:id", userAuth, updateJobController);

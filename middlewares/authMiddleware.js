@@ -2,8 +2,8 @@ import JWT from "jsonwebtoken";
 
 const userAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || authHeader.startWith("Bearer")) {
-    next("Auth Failed");
+  if (!authHeader || !authHeader.startsWith("Bearer")) {
+    return next("Auth Failed"); // Use `return` to exit function
   }
   const token = authHeader.split(" ")[1];
   try {
@@ -11,7 +11,7 @@ const userAuth = async (req, res, next) => {
     req.user = { userId: payload.userId };
     next();
   } catch (error) {
-    next("Auth Failed");
+    next("Auth Failed"); // Use `next()` to pass error to next middleware
   }
 };
 
