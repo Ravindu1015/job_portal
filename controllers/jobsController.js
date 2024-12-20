@@ -35,14 +35,14 @@ export const getAllJobsController = async (req, res, next) => {
 // Update jobs
 export const updateJobController = async (req, res, next) => {
   try {
-    const { id } = req.params; // Extract the job ID from the request parameters
-    const { company, position } = req.body; // Extract fields from the request body
+    const { id } = req.params;
+    const { company, position } = req.body;
 
-    // Validation for required fields
+    // Validation
     if (!company || !position) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all the required fields" });
+      return res.status(400).json({
+        message: "Please provide all the required fields",
+      });
     }
 
     // Fetch the job by ID
@@ -50,30 +50,35 @@ export const updateJobController = async (req, res, next) => {
 
     // Check if the job exists
     if (!job) {
-      return res.status(404).json({ message: `Job not found with id ${id}` });
+      return res.status(404).json({
+        message: `Job not found with id ${id}`,
+      });
     }
 
-    // Authorization check: Ensure the job was created by the logged-in user
+    // Guard against missing `createdBy`
+    if (!job.createdBy) {
+      return res.status(500).json({
+        message: "Job does not have a creator associated",
+      });
+    }
+
+    // Authorization check
     if (job.createdBy.toString() !== req.user.userId) {
-      return res
-        .status(403)
-        .json({ message: "You are not authorized to update this job" });
+      return res.status(403).json({
+        message: "You are not authorized to update this job",
+      });
     }
 
-    // Update the job with the new data
+    // Update the job
     const updatedJob = await jobsModel.findByIdAndUpdate(
       id,
-      { company, position }, // Fields to update
-      {
-        new: true, // Return the updated document
-        runValidators: true, // Validate the new fields against the schema
-      }
+      { company, position },
+      { new: true, runValidators: true }
     );
 
-    // Response with the updated job
+    // Response
     res.status(200).json({ updatedJob });
   } catch (error) {
-    // Pass the error to the error-handling middleware
     next(error);
   }
 };
