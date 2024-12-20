@@ -1,5 +1,7 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
+import errorMiddleware from "../middlewares/errorMiddleware.js";
+
 import {
   createJobController,
   updateJobController,
@@ -17,5 +19,8 @@ router.get("/get-job", userAuth, getAllJobsController);
 
 // Update job || PATCH
 router.patch("/update-job/:id", userAuth, updateJobController);
+
+//error mid use
+router.use(errorMiddleware);
 
 export default router;

@@ -35,33 +35,45 @@ export const getAllJobsController = async (req, res, next) => {
 // Update jobs
 export const updateJobController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { company, position } = req.body;
+    const { id } = req.params; // Extract the job ID from the request parameters
+    const { company, position } = req.body; // Extract fields from the request body
 
-    // Validation
+    // Validation for required fields
     if (!company || !position) {
-      return next("Please provide all the fields");
+      return res
+        .status(400)
+        .json({ message: "Please provide all the required fields" });
     }
 
-    // Find job
-    const job = await jobsModel.findOne({ _id: id });
+    // Fetch the job by ID
+    const job = await jobsModel.findById(id);
 
+    // Check if the job exists
     if (!job) {
-      return next(`Job not found with id ${id}`);
+      return res.status(404).json({ message: `Job not found with id ${id}` });
     }
 
-    if (req.user.userId !== job.createdBy.toString()) {
-      return next("You are not authorized to update this job");
+    // Authorization check: Ensure the job was created by the logged-in user
+    if (job.createdBy.toString() !== req.user.userId) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to update this job" });
     }
 
-    const updatedJob = await jobsModel.findOneAndUpdate({ _id: id }, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    // Update the job with the new data
+    const updatedJob = await jobsModel.findByIdAndUpdate(
+      id,
+      { company, position }, // Fields to update
+      {
+        new: true, // Return the updated document
+        runValidators: true, // Validate the new fields against the schema
+      }
+    );
 
-    // Response
+    // Response with the updated job
     res.status(200).json({ updatedJob });
   } catch (error) {
+    // Pass the error to the error-handling middleware
     next(error);
   }
 };
