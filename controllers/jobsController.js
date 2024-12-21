@@ -1,4 +1,5 @@
 import jobsModel from "../models/jobsModel.js";
+import mongoose from "mongoose";
 
 // Create jobs
 export const createJobController = async (req, res, next) => {
@@ -101,6 +102,25 @@ export const deleteJobController = async (req, res, next) => {
     res.status(200).json({ message: "Job deleted successfully" });
   } catch (error) {
     // Pass the error to the error-handling middleware
+    next(error);
+  }
+};
+
+// Job stats filter
+export const jobStatsController = async (req, res, next) => {
+  try {
+    const stats = await jobsModel.aggregate([
+      {
+        $match: { createdBy: req.user.userId },
+      },
+        $group: {
+        _id: "$status",
+        $count: { $sum: 1 },
+      },
+    ]);
+
+    res.status(200).json({ totalJobs: stats.length, stats });
+  } catch (error) {
     next(error);
   }
 };
