@@ -5,7 +5,8 @@ import errorMiddleware from "../middlewares/errorMiddleware.js";
 import {
   createJobController,
   updateJobController,
-  getAllJobsController, // Combine all imports in one destructured object
+  getAllJobsController,
+  deleteJobController, // Combine all imports in one destructured object
 } from "../controllers/jobsController.js";
 
 const router = express.Router();
@@ -19,6 +20,9 @@ router.get("/get-job", userAuth, getAllJobsController);
 
 // Update job || PATCH
 router.patch("/update-job/:id", userAuth, updateJobController);
+
+// delete job || delete
+router.delete("/delete-job/:id", userAuth, deleteJobController);
 
 //error mid use
 router.use(errorMiddleware);
