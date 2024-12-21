@@ -113,13 +113,42 @@ export const jobStatsController = async (req, res, next) => {
       {
         $match: { createdBy: req.user.userId },
       },
+      {
         $group: {
-        _id: "$status",
-        $count: { $sum: 1 },
+          _id: "$status",
+          count: { $sum: 1 },
+        },
       },
     ]);
 
-    res.status(200).json({ totalJobs: stats.length, stats });
+    //default stats
+    const defaultStats = {
+      pending: stats.pending || 0,
+      reject: stats.reject || 0,
+      interview: stats.interview || 0,
+    };
+
+    //monthly yearly stats
+    let monthlyApplication = await jobsModel.aggregate([
+      {
+        $match: {
+          createdBy: req.user.userId,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res
+      .status(200)
+      .json({ totalJobs: stats.length, defaultStats, monthlyApplication });
   } catch (error) {
     next(error);
   }
