@@ -148,13 +148,19 @@ export const jobStatsController = async (req, res, next) => {
       },
     ]);
 
-    monthlyApplication = monthlyApplication.map((item) => {
-      const {
-        _id: { year, month },
-        count,
-      } = item;
-      const date = moment;
-    });
+    monthlyApplication = monthlyApplication
+      .map((item) => {
+        const {
+          _id: { year, month },
+          count,
+        } = item;
+        const date = moment()
+          .month(month - 1)
+          .year(year)
+          .format("MMM Y");
+        return { date, count };
+      })
+      .reverse();
 
     res
       .status(200)
