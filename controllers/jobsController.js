@@ -2,33 +2,33 @@ import jobsModel from "../models/jobsModel.js";
 import mongoose from "mongoose";
 import moment from "moment";
 
-// Create jobs
+// Create Job Controller
 export const createJobController = async (req, res, next) => {
   try {
     const { company, position } = req.body;
 
     if (!company || !position) {
-      return next("Please provide all the fields");
+      return res.status(400).json({ message: "Please provide all fields" });
     }
 
-    req.body.createdBy = req.user.userId; // Assign the logged-in user's ID to createdBy
-
+    req.body.createdBy = req.user.userId;
     const job = await jobsModel.create(req.body);
-    res.status(201).json({ job });
+
+    res.status(201).json({ success: true, job });
   } catch (error) {
     next(error);
   }
 };
 
-// Get jobs
+// Get All Jobs Controller
 export const getAllJobsController = async (req, res, next) => {
   try {
-    // Find jobs and populate the createdBy field with the user details
     const jobs = await jobsModel
       .find({ createdBy: req.user.userId })
-      .populate("createdBy"); // Populate the createdBy field with the full user details
+      .populate("createdBy", "name email");
 
     res.status(200).json({
+      success: true,
       totalJobs: jobs.length,
       jobs,
     });
@@ -37,106 +37,86 @@ export const getAllJobsController = async (req, res, next) => {
   }
 };
 
-// Update jobs
+// Update Job Controller
 export const updateJobController = async (req, res, next) => {
   try {
-    const { id } = req.params; // Extract the job ID from the request parameters
-    const { company, position } = req.body; // Extract fields from the request body
+    const { id } = req.params;
+    const { company, position } = req.body;
 
-    // Validation for required fields
     if (!company || !position) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all the required fields" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Fetch the job by ID and populate the createdBy field if needed
     const job = await jobsModel.findById(id).populate("createdBy");
 
-    // Check if the job exists
     if (!job) {
-      return res.status(404).json({ message: `Job not found with id ${id}` });
+      return res.status(404).json({ message: `No job found with id ${id}` });
     }
 
-    // Authorization check: Ensure the job was created by the logged-in user
     if (job.createdBy._id.toString() !== req.user.userId) {
       return res
         .status(403)
-        .json({ message: "You are not authorized to update this job" });
+        .json({ message: "Unauthorized to update this job" });
     }
 
-    // Update the job with the new data
     const updatedJob = await jobsModel.findByIdAndUpdate(
       id,
-      { company, position }, // Fields to update
-      {
-        new: true, // Return the updated document
-        runValidators: true, // Validate the new fields against the schema
-      }
+      { company, position },
+      { new: true, runValidators: true }
     );
 
-    // Response with the updated job
-    res.status(200).json({ updatedJob });
+    res.status(200).json({ success: true, updatedJob });
   } catch (error) {
     next(error);
   }
 };
 
-// Delete jobs
+// Delete Job Controller
 export const deleteJobController = async (req, res, next) => {
   try {
-    const { id } = req.params; // Extract the job ID from the request parameters
+    const { id } = req.params;
 
-    // Fetch the job by ID
     const job = await jobsModel.findById(id);
-    // Check if the job exists
+
     if (!job) {
-      return res.status(404).json({ message: `Job not found with id ${id}` });
+      return res.status(404).json({ message: `No job found with id ${id}` });
     }
-    // Authorization check: Ensure the job was created by the logged-in user
+
     if (job.createdBy.toString() !== req.user.userId) {
       return res
         .status(403)
-        .json({ message: "You are not authorized to delete this job" });
+        .json({ message: "Unauthorized to delete this job" });
     }
-    // Delete the job
+
     await jobsModel.findByIdAndDelete(id);
-    // Response with success message
     res.status(200).json({ message: "Job deleted successfully" });
   } catch (error) {
     next(error);
   }
 };
 
-// Job stats filter
+// Job Statistics Controller
 export const jobStatsController = async (req, res, next) => {
   try {
+    const userId = new mongoose.Types.ObjectId(req.user.userId);
+
     const stats = await jobsModel.aggregate([
-      {
-        $match: { createdBy: new mongoose.Types.ObjectId(req.user.userId) },
-      },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
+      { $match: { createdBy: userId } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
-    // Default stats
     const defaultStats = {
-      pending: stats.find((stat) => stat._id === "pending")?.count || 0,
-      reject: stats.find((stat) => stat._id === "reject")?.count || 0,
-      interview: stats.find((stat) => stat._id === "interview")?.count || 0,
+      pending: 0,
+      declined: 0,
+      interview: 0,
     };
 
-    // Monthly stats
+    stats.forEach((stat) => {
+      defaultStats[stat._id] = stat.count;
+    });
+
     let monthlyApplication = await jobsModel.aggregate([
-      {
-        $match: {
-          createdBy: new mongoose.Types.ObjectId(req.user.userId),
-        },
-      },
+      { $match: { createdBy: userId } },
       {
         $group: {
           _id: {
@@ -146,25 +126,25 @@ export const jobStatsController = async (req, res, next) => {
           count: { $sum: 1 },
         },
       },
+      { $sort: { "_id.year": -1, "_id.month": -1 } },
     ]);
 
-    monthlyApplication = monthlyApplication
-      .map((item) => {
-        const {
-          _id: { year, month },
-          count,
-        } = item;
-        const date = moment()
-          .month(month - 1)
-          .year(year)
-          .format("MMM Y");
-        return { date, count };
-      })
-      .reverse();
+    monthlyApplication = monthlyApplication.map((item) => {
+      const {
+        _id: { year, month },
+        count,
+      } = item;
 
-    res
-      .status(200)
-      .json({ totalJobs: stats.length, defaultStats, monthlyApplication });
+      const date = moment(`${year}-${month}-01`).format("MMM YYYY");
+      return { date, count };
+    });
+
+    res.status(200).json({
+      success: true,
+      totalJobs: stats.length,
+      defaultStats,
+      monthlyApplication,
+    });
   } catch (error) {
     next(error);
   }
