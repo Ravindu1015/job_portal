@@ -1,5 +1,6 @@
 import jobsModel from "../models/jobsModel.js";
 import mongoose from "mongoose";
+import moment from "moment";
 
 // Create jobs
 export const createJobController = async (req, res, next) => {
@@ -10,7 +11,7 @@ export const createJobController = async (req, res, next) => {
       return next("Please provide all the fields");
     }
 
-    req.body.createdBy = req.user.userId;
+    req.body.createdBy = req.user.userId; // Assign the logged-in user's ID to createdBy
 
     const job = await jobsModel.create(req.body);
     res.status(201).json({ job });
@@ -22,7 +23,10 @@ export const createJobController = async (req, res, next) => {
 // Get jobs
 export const getAllJobsController = async (req, res, next) => {
   try {
-    const jobs = await jobsModel.find({ createdBy: req.user.userId });
+    // Find jobs and populate the createdBy field with the user details
+    const jobs = await jobsModel
+      .find({ createdBy: req.user.userId })
+      .populate("createdBy"); // Populate the createdBy field with the full user details
 
     res.status(200).json({
       totalJobs: jobs.length,
@@ -46,8 +50,8 @@ export const updateJobController = async (req, res, next) => {
         .json({ message: "Please provide all the required fields" });
     }
 
-    // Fetch the job by ID
-    const job = await jobsModel.findById(id);
+    // Fetch the job by ID and populate the createdBy field if needed
+    const job = await jobsModel.findById(id).populate("createdBy");
 
     // Check if the job exists
     if (!job) {
@@ -55,7 +59,7 @@ export const updateJobController = async (req, res, next) => {
     }
 
     // Authorization check: Ensure the job was created by the logged-in user
-    if (job.userId !== req.user.userId) {
+    if (job.createdBy._id.toString() !== req.user.userId) {
       return res
         .status(403)
         .json({ message: "You are not authorized to update this job" });
@@ -74,7 +78,6 @@ export const updateJobController = async (req, res, next) => {
     // Response with the updated job
     res.status(200).json({ updatedJob });
   } catch (error) {
-    // Pass the error to the error-handling middleware
     next(error);
   }
 };
@@ -91,7 +94,7 @@ export const deleteJobController = async (req, res, next) => {
       return res.status(404).json({ message: `Job not found with id ${id}` });
     }
     // Authorization check: Ensure the job was created by the logged-in user
-    if (job.userId !== req.user.userId) {
+    if (job.createdBy.toString() !== req.user.userId) {
       return res
         .status(403)
         .json({ message: "You are not authorized to delete this job" });
@@ -101,7 +104,6 @@ export const deleteJobController = async (req, res, next) => {
     // Response with success message
     res.status(200).json({ message: "Job deleted successfully" });
   } catch (error) {
-    // Pass the error to the error-handling middleware
     next(error);
   }
 };
@@ -111,7 +113,7 @@ export const jobStatsController = async (req, res, next) => {
   try {
     const stats = await jobsModel.aggregate([
       {
-        $match: { createdBy: req.user.userId },
+        $match: { createdBy: new mongoose.Types.ObjectId(req.user.userId) },
       },
       {
         $group: {
@@ -121,18 +123,18 @@ export const jobStatsController = async (req, res, next) => {
       },
     ]);
 
-    //default stats
+    // Default stats
     const defaultStats = {
-      pending: stats.pending || 0,
-      reject: stats.reject || 0,
-      interview: stats.interview || 0,
+      pending: stats.find((stat) => stat._id === "pending")?.count || 0,
+      reject: stats.find((stat) => stat._id === "reject")?.count || 0,
+      interview: stats.find((stat) => stat._id === "interview")?.count || 0,
     };
 
-    //monthly yearly stats
+    // Monthly stats
     let monthlyApplication = await jobsModel.aggregate([
       {
         $match: {
-          createdBy: req.user.userId,
+          createdBy: new mongoose.Types.ObjectId(req.user.userId),
         },
       },
       {
@@ -145,6 +147,14 @@ export const jobStatsController = async (req, res, next) => {
         },
       },
     ]);
+
+    monthlyApplication = monthlyApplication.map((item) => {
+      const {
+        _id: { year, month },
+        count,
+      } = item;
+      const date = moment;
+    });
 
     res
       .status(200)

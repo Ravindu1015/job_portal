@@ -28,7 +28,7 @@ const jobSchema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Types.ObjectId,
-      ref: "User",
+      ref: "User", // Reference to the User model
     },
   },
   { timestamps: true }
